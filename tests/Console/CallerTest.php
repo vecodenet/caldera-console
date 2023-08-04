@@ -33,6 +33,7 @@ class CallerTest extends TestCase {
 			'-d=example.org',
 		];
 
+		$this->expectOutputRegex('/\{.*\}/');
 		$caller->call($command, $args);
 
 		$this->assertEquals('run', $command->getArgument('action'));

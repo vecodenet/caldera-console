@@ -18,6 +18,7 @@ use PHPUnit\Framework\TestCase;
 
 use Caldera\Console\Color;
 use Caldera\Console\HasOutput;
+use Caldera\Console\Style;
 
 class HasOutputTest extends TestCase {
 
@@ -65,7 +66,12 @@ class HasOutputTest extends TestCase {
 
 	public function testColorize() {
 		$colorized = $this->colorize('foo', Color::fgRed, Color::bgYellow);
-		$this->assertEquals("\033[37;43m\033[31mfoo\033[0m", $colorized);
+		$this->assertEquals("\033[31;43mfoo\033[0m", $colorized);
+		# Styling
+		$colorized = $this->colorize('foo', Color::fgRed, null, Style::build(Style::styleUnderline));
+		$this->assertEquals("\033[31;4mfoo\033[0m", $colorized);
+		$colorized = $this->colorize('foo', Color::fgGreen, null, Style::build(Style::styleReverse, Style::styleItalic));
+		$this->assertEquals("\033[32;3;7mfoo\033[0m", $colorized);
 	}
 
 	public function testFormat() {

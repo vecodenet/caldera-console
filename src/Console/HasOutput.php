@@ -15,6 +15,7 @@ use RuntimeException;
 use InvalidArgumentException;
 
 use Caldera\Console\Color;
+use Caldera\Console\Style;
 
 trait HasOutput {
 
@@ -88,21 +89,29 @@ trait HasOutput {
 
 	/**
 	 * Generates a colorized string
-	 * @param  string $str        String to colorize
-	 * @param  Color  $text_color Color to use for text
-	 * @param  Color  $back_color Color to use for background
+	 * @param  string       $str        String to colorize
+	 * @param  Color        $text_color Color to use for text
+	 * @param  Color        $back_color Color to use for background
+	 * @param  array<Style> $styles     Extra styles array
 	 */
-	public function colorize(string $str, Color $text_color, ?Color $back_color = null): string {
+	public function colorize(string $str, Color $text_color, ?Color $back_color = null, array $styles = []): string {
 		if ( str_starts_with($text_color->name, 'bg') ) {
 			throw new InvalidArgumentException('You must specify a foreground color constant');
 		}
+		$styles = $styles ? implode(';', array_map(function($item) {
+			return $item->value;
+		}, $styles)) : null;
 		if (! $back_color ) {
-			$ret = sprintf('%s%s%s', $this->escape($text_color->value), $str, $this->escape('0m'));
+			$color = "{$text_color->value}";
+			$color .= $styles ? ";{$styles}" : '';
+			$ret = sprintf('%sm%s%s', $this->escape($color), $str, $this->escape('0m'));
 		} else {
 			if ( str_starts_with($back_color->name, 'fg') ) {
 				throw new InvalidArgumentException('You must specify a background color constant');
 			}
-			$ret = sprintf('%s%s%s%s', $this->escape($back_color->value), $this->escape($text_color->value), $str, $this->escape('0m'));
+			$color = "{$text_color->value};{$back_color->value}";
+			$color .= $styles ? ";{$styles}" : '';
+			$ret = sprintf('%sm%s%s', $this->escape($color), $str, $this->escape('0m'));
 		}
 		return $ret;
 	}
