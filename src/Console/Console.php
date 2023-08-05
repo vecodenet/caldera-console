@@ -59,12 +59,16 @@ class Console {
 
 	/**
 	 * Register a new path to load commands from
-	 * @param  string $path Path to load commands from
+	 * @param  string $path      Path to load commands from
+	 * @param  bool   $recursive Whether to scan the directory recursively or not
 	 * @return $this
 	 */
-	public function path(string $path) {
+	public function path(string $path, bool $recursive = false) {
 		if ( file_exists($path) && is_dir($path) ) {
-			$this->paths[] = $path;
+			$this->paths[] = [
+				'path' => $path,
+				'recursive' => $recursive,
+			];
 			$this->loaded = false;
 		} else {
 			throw new InvalidArgumentException('The specified path does not exist');
@@ -136,22 +140,37 @@ class Console {
 	protected function autoload() {
 		# Now iterate the registered paths
 		if ($this->paths) {
-			foreach ($this->paths as $path) {
-				$files = scandir($path);
-				if ($files) {
-					foreach ($files as $file) {
-						if ( preg_match('/(.*)\.php/', $file, $matches) === 1 ) {
-							$classes = $this->getDefinedClasses($path . DIRECTORY_SEPARATOR . $file);
-							foreach ($classes as $class) {
-								$this->command($class);
-							}
-						}
-					}
-				}
+			foreach ($this->paths as $entry) {
+				$path = $entry['path'] ?? '';
+				$recursive = $entry['recursive'] ?? false;
+				$this->scanDirectory($path, $recursive);
 			}
 		}
 		$this->loaded = true;
 		return $this;
+	}
+
+	/**
+	 * Scan directory for commands
+	 * @param  string $path      Directory path
+	 * @param  bool   $recursive Whether to scan the directory recursively or not
+	 */
+	protected function scanDirectory(string $path, bool $recursive): void {
+		$files = scandir($path);
+		if ($files) {
+			foreach ($files as $file) {
+				if ( is_file($path . DIRECTORY_SEPARATOR . $file) ) {
+					if ( preg_match('/(.*)\.php/', $file, $matches) === 1 ) {
+						$classes = $this->getDefinedClasses($path . DIRECTORY_SEPARATOR . $file);
+						foreach ($classes as $class) {
+							$this->command($class);
+						}
+					}
+				} else if ( is_dir($path . DIRECTORY_SEPARATOR . $file) && $file != '..' && $file != '.' ) {
+					$this->scanDirectory($path . DIRECTORY_SEPARATOR . $file, $recursive);
+				}
+			}
+		}
 	}
 
 	/**

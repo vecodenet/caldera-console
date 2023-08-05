@@ -32,8 +32,15 @@ class ConsoleTest extends TestCase {
 		$console->path( dirname(__FILE__) . '/Unknown' );
 		# Now include the invalid commands
 		$console->path( dirname(__FILE__) . '/Commands/Invalid' );
-		$console->call('certbot', ['-d vecode.net']);
 		$this->expectException(RuntimeException::class, "Command 'Caldera\Tests\Console\Commands\Invalid\InvalidCommand' does not have a valid signature");
+		$console->call('certbot', ['-d vecode.net']);
+	}
+
+	public function testAddPathsRecursive() {
+		$console = new Console();
+		$console->path( dirname(__FILE__) . '/Commands', true );
+		$this->expectException(RuntimeException::class, "Command 'Caldera\Tests\Console\Commands\Invalid\InvalidCommand' does not have a valid signature");
+		$console->call('certbot', ['-d vecode.net']);
 	}
 
 	public function testAddCommand() {
