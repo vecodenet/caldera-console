@@ -29,32 +29,34 @@ class Parser {
 		# Get the command arguments
 		$arguments = $command->getArguments();
 		$tokens = explode(' ', $arguments);
-		# Parse the command arguments
-		$pattern = '/{(--)?(?:((?:[^\|}]?)+)\|)?((?:[^}\*\?=]?)+)(=)?((?:[^}\*\?]?)+)?(\?)?(\*)?}/i';
-		foreach ($tokens as $token) {
-			if ( preg_match($pattern, $token, $matches) === 1 ) {
-				$name = $matches[3];
-				$default = $matches[5] ? $matches[5] : '';
-				$shortcut = $matches[2];
-				$option = !!$matches[1];
-				$boolean = !!$matches[1] && !$matches[4];
-				$required = !($matches[6] ?? false);
-				$array = !!($matches[7] ?? false);
-				$expr = '';
-				if ($option) {
-					$expr = $shortcut ?'^(?:(?:-%1$s)|(?:--%2$s))' :  '(?:--%2$s)';
-					$expr .= $boolean ? '' : '(?:[= ](.*))?';
-					$expr = sprintf("/{$expr}/", $shortcut, $name);
+		if ($arguments) {
+			# Parse the command arguments
+			$pattern = '/{(--)?(?:((?:[^\|}]?)+)\|)?((?:[^}\*\?=]?)+)(=)?((?:[^}\*\?]?)+)?(\?)?(\*)?}/i';
+			foreach ($tokens as $token) {
+				if ( preg_match($pattern, $token, $matches) === 1 ) {
+					$name = $matches[3];
+					$default = $matches[5] ? $matches[5] : '';
+					$shortcut = $matches[2];
+					$option = !!$matches[1];
+					$boolean = !!$matches[1] && !$matches[4];
+					$required = !($matches[6] ?? false);
+					$array = !!($matches[7] ?? false);
+					$expr = '';
+					if ($option) {
+						$expr = $shortcut ?'^(?:(?:-%1$s)|(?:--%2$s))' :  '(?:--%2$s)';
+						$expr .= $boolean ? '' : '(?:[= ](.*))?';
+						$expr = sprintf("/{$expr}/", $shortcut, $name);
+					} else {
+						$expr = '/^(?!-{1,2})(.*)/';
+					}
+					$type = $option ? 'options' : 'arguments';
+					$key = "{$type}.{$name}";
+					#
+					$item = new Argument($name, $default, $shortcut, $option, $boolean, $required, $array, $expr);
+					$items[$key] = $item;
 				} else {
-					$expr = '/^(?!-{1,2})(.*)/';
+					throw new RuntimeException("Invalid argument format: '{$token}'");
 				}
-				$type = $option ? 'options' : 'arguments';
-				$key = "{$type}.{$name}";
-				#
-				$item = new Argument($name, $default, $shortcut, $option, $boolean, $required, $array, $expr);
-				$items[$key] = $item;
-			} else {
-				throw new RuntimeException("Invalid argument format: '{$token}'");
 			}
 		}
 		return $items;

@@ -55,6 +55,12 @@ class ConsoleTest extends TestCase {
 		$console->command('Caldera\Tests\Console\Commands\Dummy\DummyCommand');
 	}
 
+	public function testNoArguments() {
+		$console = new Console();
+		$this->expectException(RuntimeException::class, "No commands available");
+		$console->call('greet');
+	}
+
 	public function testEmpty() {
 		$console = new Console();
 		$this->expectException(RuntimeException::class, "No commands available");

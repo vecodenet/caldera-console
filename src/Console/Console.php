@@ -166,7 +166,7 @@ class Console {
 							$this->command($class);
 						}
 					}
-				} else if ( is_dir($path . DIRECTORY_SEPARATOR . $file) && $file != '..' && $file != '.' ) {
+				} else if ( is_dir($path . DIRECTORY_SEPARATOR . $file) && $file != '..' && $file != '.' && $recursive ) {
 					$this->scanDirectory($path . DIRECTORY_SEPARATOR . $file, $recursive);
 				}
 			}
